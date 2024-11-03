@@ -99,18 +99,18 @@ class PandasDataset(Dataset):
 def main():
     dataArgs = DataArgs()
     universe = dataArgs.market
-    # 准备数据torch Dataset实例
-    dl_train, dl_valid, dl_test=prepare_data(dataArgs)
+    # # 准备数据torch Dataset实例
+    # dl_train, dl_valid, dl_test=prepare_data(dataArgs)
 
 
-    # # Please install qlib first before load the data.
-    # with open(f'data/{universe}/{universe}_dl_train.pkl', 'rb') as f:
-    #     dl_train = pickle.load(f)
-    # with open(f'data/{universe}/{universe}_dl_valid.pkl', 'rb') as f:
-    #     dl_valid = pickle.load(f)
-    # with open(f'data/{universe}/{universe}_dl_test.pkl', 'rb') as f:
-    #     dl_test = pickle.load(f)
-    # print("Data Loaded.")
+    # Please install qlib first before load the data.
+    with open(f'data/{universe}/{universe}_dl_train.pkl', 'rb') as f:
+        dl_train = pickle.load(f)
+    with open(f'data/{universe}/{universe}_dl_valid.pkl', 'rb') as f:
+        dl_valid = pickle.load(f)
+    with open(f'data/{universe}/{universe}_dl_test.pkl', 'rb') as f:
+        dl_test = pickle.load(f)
+    print("Data Loaded.")
     d_feat = 158
     d_model = 256
     t_nhead = 4
@@ -134,19 +134,47 @@ def main():
         n_epochs=n_epoch, lr=lr, GPU=GPU, seed=seed, train_stop_loss_thred=train_stop_loss_thred,
         save_path='model/', save_prefix=universe
     )
-    # Train
-    print("开始训练.....")
-    model.fit(dl_train, dl_valid)
-    print("Model Trained.")
-    # Test
-    predictions, metrics = model.predict(dl_test)
-    print(metrics)
-    # Load and Test
-    # param_path = f'model/{universe}master_0.pkl.'
-    # print(f'Model Loaded from {param_path}')
-    # model.load_param(param_path)
+    # # Train
+    # print("开始训练.....")
+    # model.fit(dl_train, dl_valid)
+    # print("Model Trained.")
+    # # Test
     # predictions, metrics = model.predict(dl_test)
     # print(metrics)
+
+    # Load and Test
+    param_path = f'model/{universe}master_0.pkl.'
+    print(f'Model Loaded from {param_path}')
+    model.load_param(param_path)
+    predictions, metrics = model.predict(dl_test)
+    print(metrics)
+
+
+    # 提取 dl_test 的 data 字段的最后一列
+    labels = dl_test.data.iloc[:, -1]
+
+    # 将 predictions 转换为 DataFrame 并命名为 'prediction'
+    predictions = predictions.to_frame(name='prediction')
+
+    # 重置索引
+    predictions = predictions.reset_index()
+    predictions.columns = ['instrument', 'datetime', 'score']
+    predictions['datetime']=pd.to_datetime(predictions['datetime'])
+    labels = labels.reset_index()
+    labels.columns = ['datetime', 'instrument', 'label']
+    labels['datetime']=pd.to_datetime(labels['datetime'])
+
+    # 合并 predictions 和 labels
+    merged_df = pd.merge(labels, predictions,  on=['datetime','instrument'])
+
+    # 重新设置索引
+    merged_df.set_index(['datetime','instrument'], inplace=True)
+
+    # 将合并后的 DataFrame 赋值给 predictions
+    predictions = merged_df
+
+    # Save predictions
+    predictions.to_pickle(f'data/{universe}_predictions.pkl')
 
 
 main()
