@@ -165,7 +165,7 @@ def main():
     labels['datetime']=pd.to_datetime(labels['datetime'])
 
     # 合并 predictions 和 labels
-    merged_df = pd.merge(labels, predictions,  on=['datetime','instrument'])
+    merged_df = pd.merge(predictions,  labels, on=['datetime', 'instrument'])
 
     # 重新设置索引
     merged_df.set_index(['datetime','instrument'], inplace=True)
