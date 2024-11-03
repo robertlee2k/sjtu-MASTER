@@ -134,20 +134,20 @@ def main():
         n_epochs=n_epoch, lr=lr, GPU=GPU, seed=seed, train_stop_loss_thred=train_stop_loss_thred,
         save_path='model/', save_prefix=universe
     )
-    # # Train
-    # print("开始训练.....")
-    # model.fit(dl_train, dl_valid)
-    # print("Model Trained.")
-    # # Test
-    # predictions, metrics = model.predict(dl_test)
-    # print(metrics)
-
-    # Load and Test
-    param_path = f'model/{universe}master_0.pkl.'
-    print(f'Model Loaded from {param_path}')
-    model.load_param(param_path)
+    # Train
+    print("开始训练.....")
+    model.fit(dl_train, dl_valid)
+    print("Model Trained.")
+    # Test
     predictions, metrics = model.predict(dl_test)
     print(metrics)
+
+    # Load and Test
+    # param_path = f'model/{universe}master_0.pkl.'
+    # print(f'Model Loaded from {param_path}')
+    # model.load_param(param_path)
+    # predictions, metrics = model.predict(dl_test)
+    # print(metrics)
 
 
     # 提取 dl_test 的 data 字段的最后一列
